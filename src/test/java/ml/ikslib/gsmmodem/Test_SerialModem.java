@@ -3,7 +3,9 @@ package ml.ikslib.gsmmodem;
 
 import javax.crypto.spec.SecretKeySpec;
 
-import ml.ikslib.gateway.message.UssdCommand;
+import ml.ikslib.gateway.ussd.USSDDcs;
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +48,7 @@ public class Test_SerialModem extends TestCase {
 		Service.getInstance().setInboundMessageCallback(new InboundMessageCallback());
 		Service.getInstance().setDeliveryReportCallback(new DeliveryReportCallback());
 		Service.getInstance().start();
-		Modem gateway = new Modem("modem", "COM18", "115200", "0000", "", "", "");
+		Modem gateway = new Modem("modem", "COM8", "115200", "0000", "", "", "");
 		
 		Service.getInstance().registerGateway(gateway);
 
@@ -63,10 +65,13 @@ public class Test_SerialModem extends TestCase {
 		
 		
 		if (RECIPIENT.length() > 0) {
-			
+
+			USSDRequest request = new USSDRequest("#555#");
 			logger.info("Sending ussd:");
-			gateway.send(new UssdCommand("*771#"));
-			
+			USSDResponse res = gateway.send(request);
+
+			logger.info("Gateway Response....:");
+//			logger.info(res.toString());
 			//Thread.sleep(60000);
 		}
 		Service.getInstance().unregisterGateway(gateway);

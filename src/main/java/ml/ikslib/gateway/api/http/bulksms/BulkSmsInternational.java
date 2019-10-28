@@ -17,7 +17,8 @@ import ml.ikslib.gateway.message.DeliveryReportMessage.DeliveryStatus;
 import ml.ikslib.gateway.message.OutboundMessage;
 import ml.ikslib.gateway.message.OutboundMessage.FailureCause;
 import ml.ikslib.gateway.message.OutboundMessage.SentStatus;
-import ml.ikslib.gateway.message.UssdCommand;
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 
 public class BulkSmsInternational extends AbstractHttpGateway
 {
@@ -273,8 +274,7 @@ public class BulkSmsInternational extends AbstractHttpGateway
 	}
 
 	@Override
-	protected boolean _send(UssdCommand code) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
+	protected USSDResponse _sendUSSDCommand(USSDRequest request, boolean interactive) throws Exception {
+		return null;
 	}
 }

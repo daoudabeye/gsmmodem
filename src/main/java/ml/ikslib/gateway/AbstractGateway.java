@@ -4,6 +4,8 @@ package ml.ikslib.gateway;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,12 +13,10 @@ import ml.ikslib.gateway.core.Capabilities;
 import ml.ikslib.gateway.core.Coverage;
 import ml.ikslib.gateway.core.CreditBalance;
 import ml.ikslib.gateway.core.Statistics;
-import ml.ikslib.gateway.message.AbstractMessage.Type;
 import ml.ikslib.gateway.message.DeliveryReportMessage.DeliveryStatus;
 import ml.ikslib.gateway.message.InboundMessage;
 import ml.ikslib.gateway.message.MsIsdn;
 import ml.ikslib.gateway.message.OutboundMessage;
-import ml.ikslib.gateway.message.UssdCommand;
 import ml.ikslib.gateway.queue.DefaultOutboundQueue;
 import ml.ikslib.gateway.queue.IOutboundQueue;
 import ml.ikslib.gateway.threading.GatewayMessageDispatcher;
@@ -231,19 +231,19 @@ public abstract class AbstractGateway {
 				this.concurrency.release();
 		}
 	}
-	
-	final public boolean send(UssdCommand command) throws Exception {
+
+	final public USSDResponse send(USSDRequest command) throws Exception {
 		boolean acquiredLock = false;
 		try {
 			if (getStatus() != Status.Started) {
-				logger.warn("Outbound ussd via non-started gateway: " + command.getShortCode() + " ("
+				logger.warn("Outbound ussd via non-started gateway: " + command.getContent() + " ("
 						+ getStatus() + ")");
-				return false;
+				return null;
 			}
 			this.concurrency.acquire();
 			acquiredLock = true;
-			boolean result = _send(command);
-			if (result) {
+			USSDResponse result = _sendUSSDCommand(command, false);
+			if (result != null) {
 				getStatistics().increaseTotalUssdSent();
 				Service.getInstance().getStatistics().increaseTotalUssdSent();
 			} else {
@@ -348,8 +348,8 @@ public abstract class AbstractGateway {
 	abstract protected CreditBalance _queryCreditBalance() throws Exception;
 
 	abstract protected Coverage _queryCoverage(Coverage coverage) throws Exception;
-	
-	abstract protected boolean _send(UssdCommand code) throws Exception;
+
+	abstract protected USSDResponse _sendUSSDCommand(USSDRequest request , boolean interactive)  throws Exception;
 
 	private void setStatus(Status status) {
 		Status oldStatus = this.status;

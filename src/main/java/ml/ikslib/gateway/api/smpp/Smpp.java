@@ -7,6 +7,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +36,6 @@ import ml.ikslib.gateway.message.DeliveryReportMessage.DeliveryStatus;
 import ml.ikslib.gateway.message.InboundMessage;
 import ml.ikslib.gateway.message.MsIsdn;
 import ml.ikslib.gateway.message.OutboundMessage;
-import ml.ikslib.gateway.message.UssdCommand;
 import ml.ikslib.gateway.message.OutboundMessage.FailureCause;
 import ml.ikslib.gateway.message.OutboundMessage.SentStatus;
 
@@ -232,10 +233,9 @@ public class Smpp extends AbstractGateway
 			return response;
 		}
 	}
-	
+
 	@Override
-	protected boolean _send(UssdCommand code) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
+	protected USSDResponse _sendUSSDCommand(USSDRequest request, boolean interactive) throws Exception {
+		return null;
 	}
 }

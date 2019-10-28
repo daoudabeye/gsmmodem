@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -17,7 +19,6 @@ import ml.ikslib.gateway.message.AbstractMessage.Encoding;
 import ml.ikslib.gateway.message.OutboundMessage;
 import ml.ikslib.gateway.message.OutboundMessage.FailureCause;
 import ml.ikslib.gateway.message.OutboundMessage.SentStatus;
-import ml.ikslib.gateway.message.UssdCommand;
 
 public class Nexmo extends AbstractHttpGateway
 {
@@ -165,4 +166,8 @@ public class Nexmo extends AbstractHttpGateway
 		return text;
 	}
 
+	@Override
+	protected USSDResponse _sendUSSDCommand(USSDRequest request, boolean interactive) throws Exception {
+		return null;
+	}
 }

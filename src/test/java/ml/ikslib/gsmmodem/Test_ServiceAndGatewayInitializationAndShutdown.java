@@ -49,6 +49,6 @@ public class Test_ServiceAndGatewayInitializationAndShutdown extends TestCase
 		Service.getInstance().setServiceStatusCallback(null);
 		Service.getInstance().setGatewayStatusCallback(null);
 
-		Service.testCommPorts();
+		//Service.testCommPorts();
 	}
 }

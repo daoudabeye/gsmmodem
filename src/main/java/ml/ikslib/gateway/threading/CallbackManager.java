@@ -4,28 +4,14 @@ package ml.ikslib.gateway.threading;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import ml.ikslib.gateway.callback.*;
+import ml.ikslib.gateway.callback.events.*;
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ml.ikslib.gateway.AbstractGateway;
 import ml.ikslib.gateway.Service;
-import ml.ikslib.gateway.callback.IDeliveryReportCallback;
-import ml.ikslib.gateway.callback.IDequeueMessageCallback;
-import ml.ikslib.gateway.callback.IGatewayStatusCallback;
-import ml.ikslib.gateway.callback.IInboundCallCallback;
-import ml.ikslib.gateway.callback.IInboundMessageCallback;
-import ml.ikslib.gateway.callback.IMessageSentCallback;
-import ml.ikslib.gateway.callback.IQueueThresholdCallback;
-import ml.ikslib.gateway.callback.IServiceStatusCallback;
-import ml.ikslib.gateway.callback.events.BaseCallbackEvent;
-import ml.ikslib.gateway.callback.events.DeliveryReportCallbackEvent;
-import ml.ikslib.gateway.callback.events.DequeueMessageCallbackEvent;
-import ml.ikslib.gateway.callback.events.GatewayStatusCallbackEvent;
-import ml.ikslib.gateway.callback.events.InboundCallCallbackEvent;
-import ml.ikslib.gateway.callback.events.InboundMessageCallbackEvent;
-import ml.ikslib.gateway.callback.events.MessageSentCallbackEvent;
-import ml.ikslib.gateway.callback.events.QueueThresholdCallbackEvent;
-import ml.ikslib.gateway.callback.events.ServiceStatusCallbackEvent;
 import ml.ikslib.gateway.core.Settings;
 import ml.ikslib.gateway.message.DeliveryReportMessage;
 import ml.ikslib.gateway.message.InboundMessage;
@@ -52,6 +38,8 @@ public class CallbackManager {
 	IDequeueMessageCallback dequeueMessageCallback = null;
 
 	IQueueThresholdCallback queueThresholdCallback = null;
+
+	IUSSDNotification ussdNotification = null;
 
 	CallbackManagerDispatcher dispatcher = null;
 
@@ -90,6 +78,11 @@ public class CallbackManager {
 	public boolean registerDequeueMessageEvent(OutboundMessage message) {
 		return (this.dequeueMessageCallback == null ? false
 				: this.eventQueue.add(new DequeueMessageCallbackEvent(message)));
+	}
+
+	public boolean registerUssdNotificationEvent(USSDResponse response){
+		return (this.ussdNotification == null ? false
+				: this.eventQueue.add(new IUSSDNotificationEvent(response)));
 	}
 
 	public boolean registerQueueThresholdEvent(int queueLoad) {

@@ -8,11 +8,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,9 @@ public abstract class AbstractModemDriver{
 	Modem modem;
 
 	boolean responseOk;
+
+	boolean ussdResponse = false;
+	boolean interactiveUssd = false;
 
 	String memoryLocations = "";
 
@@ -117,8 +122,9 @@ public abstract class AbstractModemDriver{
 	protected void write(byte s) throws IOException {
 		this.out.write(s);
 	}
-	
 
+	String regex = "\"(.*)\"";
+	Pattern pattern = Pattern.compile(regex);
 	private String getResponse() throws TimeoutException, IOException, NumberFormatException, InterruptedException {
 		StringBuffer raw = new StringBuffer(256);
 		StringBuffer b = new StringBuffer(256);
@@ -147,15 +153,28 @@ public abstract class AbstractModemDriver{
 				}
 			}
 			
-			if (line.startsWith("+CUSD:")) {
+			if (line.startsWith("+CUSD")) {
+				ussdResponse = true;
 				raw.append(line);
 				raw.append("$");
 				b.append(line);
 				this.responseOk = true;
-				break;
+				continue;
 			}
-			
-			
+
+			if(ussdResponse){
+				raw.append(line);
+				raw.append("$");
+				b.append(line);
+				if (line.indexOf(",15") >= 0) {
+					ussdResponse = false;
+					Service.getInstance().getCallbackManager().
+							registerUssdNotificationEvent(new USSDResponse(b.toString(), modem.getGatewayId()));
+					break;
+				}
+				continue;
+			}
+
 			if (line.startsWith("+CLIP:")) {
 				write("+++", true);
 				Common.countSheeps(Integer.valueOf(getModemSettings("wait_unit")));
@@ -192,7 +211,7 @@ public abstract class AbstractModemDriver{
 			raw.append("$");
 			b.append(line);
 		}
-		logger.debug(getPortInfo() + " ==> " + raw.toString());
+		//logger.debug(getPortInfo() + " ==> " + raw.toString());
 		logger.info(getPortInfo() + " ==> " + raw.toString());
 		return b.toString();
 	}
@@ -522,6 +541,7 @@ public abstract class AbstractModemDriver{
 		write(String.format("AT+CMGS=\"%s\"\r", recipient), true);
 		while (this.buffer.length() == 0)
 			Common.countSheeps(Integer.valueOf(getModemSettings("wait_unit")));
+
 		Common.countSheeps(Integer.valueOf(getModemSettings("wait_unit"))
 				* Integer.valueOf(getModemSettings("delay_before_send_pdu")));
 		clearResponses();
@@ -532,20 +552,23 @@ public abstract class AbstractModemDriver{
 			return Integer.parseInt(response.substring(response.indexOf(":") + 1).trim());
 		return -1;
 	}
-	
-	public int atSendUssd(String shortCode) throws Exception {
-		
-		write(String.format("AT+CUSD=1,\"%s\", 15\r", shortCode), false);
+
+	public USSDResponse atSendUssd(String rawRequest, boolean interactive) throws Exception {
+		System.out.println("Sending " + rawRequest);
+//		write(String.format("AT+CUSD=1,\"%s\", 15\r", shortCode), false);
+		write(rawRequest, false);
+
 		if (!this.responseOk)
-			throw new Exception("Unsupported code: " + shortCode);
+			throw new Exception("Unsupported code: " + rawRequest);
 		
 		while (this.buffer.length() == 0)
 			Common.countSheeps(Integer.valueOf(getModemSettings("wait_unit")));
 		
 		String response = getResponse();
-		if (this.responseOk)
-			return Integer.parseInt(response.substring(response.indexOf(":") + 2, response.indexOf(":") + 3).trim());
-		return -1;
+
+        if (this.responseOk)
+            return new USSDResponse(response, modem.getGatewayId());
+        return null;
 	}
 
 	public ModemResponse atSetEncoding(String encoding) throws Exception {

@@ -14,6 +14,8 @@ import ml.ikslib.gateway.core.Capabilities.Caps;
 import ml.ikslib.gateway.message.OutboundMessage;
 import ml.ikslib.gateway.message.OutboundMessage.FailureCause;
 import ml.ikslib.gateway.message.OutboundMessage.SentStatus;
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 
 public class TXTImpact extends AbstractHttpGateway
 {
@@ -135,5 +137,10 @@ public class TXTImpact extends AbstractHttpGateway
 	protected String translateText(String text)
 	{
 		return text;
+	}
+
+	@Override
+	protected USSDResponse _sendUSSDCommand(USSDRequest request, boolean interactive) throws Exception {
+		return null;
 	}
 }

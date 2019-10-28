@@ -7,6 +7,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -242,5 +244,10 @@ public class TextMagic extends AbstractHttpGateway
 	protected String translateText(String text)
 	{
 		return text;
+	}
+
+	@Override
+	protected USSDResponse _sendUSSDCommand(USSDRequest request, boolean interactive) throws Exception {
+		return null;
 	}
 }

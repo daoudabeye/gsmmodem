@@ -16,7 +16,8 @@ import ml.ikslib.gateway.message.InboundMessage;
 import ml.ikslib.gateway.message.OutboundMessage;
 import ml.ikslib.gateway.message.OutboundMessage.FailureCause;
 import ml.ikslib.gateway.message.OutboundMessage.SentStatus;
-import ml.ikslib.gateway.message.UssdCommand;
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 
 public class MockGateway extends AbstractGateway
 {
@@ -33,8 +34,7 @@ public class MockGateway extends AbstractGateway
 		this(gatewayId, 100, 10);
 	}
 
-	public MockGateway(String id, int delay, int failureRate)
-	{
+	public MockGateway(String id, int delay, int failureRate) {
 		super(1, 1, id, "Mock Gateway");
 		Capabilities caps = new Capabilities();
 		caps.set(Caps.CanSendMessage);
@@ -43,16 +43,14 @@ public class MockGateway extends AbstractGateway
 		this.delay = delay;
 	}
 
-	public MockGateway(String id, String description, Capabilities caps, int failureRate, int delay)
-	{
+	public MockGateway(String id, String description, Capabilities caps, int failureRate, int delay) {
 		super(1, 1, id, description);
 		setCapabilities(caps);
 		this.failureRate = failureRate;
 		this.delay = delay;
 	}
 
-	public MockGateway(String id, String description, Capabilities caps, int noOfDispatchers, int concurrencyLevel, int failureRate, int delay)
-	{
+	public MockGateway(String id, String description, Capabilities caps, int noOfDispatchers, int concurrencyLevel, int failureRate, int delay) {
 		super(noOfDispatchers, concurrencyLevel, id, description);
 		setCapabilities(caps);
 		this.failureRate = failureRate;
@@ -171,8 +169,7 @@ public class MockGateway extends AbstractGateway
 	}
 
 	@Override
-	protected boolean _send(UssdCommand code) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
+	protected USSDResponse _sendUSSDCommand(USSDRequest request, boolean interactive) throws Exception {
+		return null;
 	}
 }

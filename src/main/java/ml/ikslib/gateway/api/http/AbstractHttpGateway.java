@@ -32,7 +32,6 @@ import ml.ikslib.gateway.message.DeliveryReportMessage;
 import ml.ikslib.gateway.message.DeliveryReportMessage.DeliveryStatus;
 import ml.ikslib.gateway.message.InboundMessage;
 import ml.ikslib.gateway.message.OutboundMessage;
-import ml.ikslib.gateway.message.UssdCommand;
 import ml.ikslib.gateway.message.OutboundMessage.SentStatus;
 
 public abstract class AbstractHttpGateway extends AbstractGateway
@@ -312,12 +311,6 @@ public abstract class AbstractHttpGateway extends AbstractGateway
 			default:
 				throw new RuntimeException("Internal error - unknown HTTP method!");
 		}
-	}
-	
-	@Override
-	protected boolean _send(UssdCommand code) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 	abstract protected void prepareUrlConnection(URLConnection con);

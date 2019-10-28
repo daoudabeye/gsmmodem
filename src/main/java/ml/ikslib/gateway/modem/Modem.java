@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import ml.ikslib.gateway.modem.driver.SerialModemDriver;
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +27,9 @@ import ml.ikslib.gateway.message.MsIsdn.Type;
 import ml.ikslib.gateway.message.OutboundMessage;
 import ml.ikslib.gateway.message.OutboundMessage.FailureCause;
 import ml.ikslib.gateway.message.OutboundMessage.SentStatus;
-import ml.ikslib.gateway.message.UssdCommand;
-import ml.ikslib.gateway.message.UssdCommand.ExecStatus;
 import ml.ikslib.gateway.modem.DeviceInformation.Modes;
 import ml.ikslib.gateway.modem.driver.AbstractModemDriver;
 import ml.ikslib.gateway.modem.driver.IPModemDriver;
-import ml.ikslib.gateway.modem.driver.JSerialModemDriver;
 
 public class Modem extends AbstractGateway {
 	static Logger logger = LoggerFactory.getLogger(Modem.class);
@@ -214,20 +213,16 @@ public class Modem extends AbstractGateway {
 	}
 
 	@Override
-	protected boolean _send(UssdCommand command) throws Exception {
-		synchronized (this.modemDriver._LOCK_) {
-			int refNo = this.modemDriver.atSendUssd(command.getShortCode());
-			if (refNo >= 0) {
-				command.setGatewayId(getGatewayId());
-				command.setSentDate(new Date());
-				command.setStatus(ExecStatus.Executed);
-				command.setFailureCause(FailureCause.None);
-			} else {
-				command.setStatus(ExecStatus.Failed);
-				command.setFailureCause(FailureCause.GatewayFailure);
-			}
-			return (command.getStatus() == ExecStatus.Executed);
-		}
+	protected USSDResponse _sendUSSDCommand(USSDRequest request, boolean interactive) throws Exception {
+        synchronized (this.modemDriver._LOCK_) {
+            USSDResponse response = this.modemDriver.atSendUssd(request.getRawRequest(), interactive);
+            if(response != null){
+                response.setGatewayId(getGatewayId());
+
+                return response;
+            }
+        }
+		return null;
 	}
 
 	@Override

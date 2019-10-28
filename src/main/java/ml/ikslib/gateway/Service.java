@@ -30,17 +30,12 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import ml.ikslib.gateway.callback.*;
+import ml.ikslib.gateway.ussd.USSDRequest;
+import ml.ikslib.gateway.ussd.USSDResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ml.ikslib.gateway.callback.IDeliveryReportCallback;
-import ml.ikslib.gateway.callback.IDequeueMessageCallback;
-import ml.ikslib.gateway.callback.IGatewayStatusCallback;
-import ml.ikslib.gateway.callback.IInboundCallCallback;
-import ml.ikslib.gateway.callback.IInboundMessageCallback;
-import ml.ikslib.gateway.callback.IMessageSentCallback;
-import ml.ikslib.gateway.callback.IQueueThresholdCallback;
-import ml.ikslib.gateway.callback.IServiceStatusCallback;
 import ml.ikslib.gateway.core.Coverage;
 import ml.ikslib.gateway.core.CreditBalance;
 import ml.ikslib.gateway.core.Settings;
@@ -89,6 +84,8 @@ public class Service {
 	IPreSendHook preSendHook = null;
 
 	IPreQueueHook preQueueHook = null;
+
+	IUSSDNotification ussdNotification;
 
 //	HttpServer httpServer = new HttpServer();
 
@@ -428,6 +425,15 @@ public class Service {
 		}
 	}
 
+	public USSDResponse sendUSSDRequest(USSDRequest request, String gatewayId) throws Exception {
+		if (getStatus() != Status.Started) { return null; }
+
+		AbstractGateway gateway = getGatewayById(gatewayId);
+		if (request == null) { throw new IllegalArgumentException("Cannot use a null request object"); }
+		if (gateway == null) { throw new Exception("Cannot use a null gateway"); }
+		return gateway.send(request);
+	}
+
 	public boolean registerGateway(AbstractGateway gateway) {
 		synchronized (this._LOCK_) {
 			logger.info("Registering Gateway: " + gateway.toShortString());
@@ -646,5 +652,13 @@ public class Service {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public IUSSDNotification getUssdNotification() {
+		return ussdNotification;
+	}
+
+	public void setUssdNotification(IUSSDNotification ussdNotification) {
+		this.ussdNotification = ussdNotification;
 	}
 }
