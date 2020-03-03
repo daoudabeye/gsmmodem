@@ -15,6 +15,7 @@ public class GatewayStatusCallback implements IGatewayStatusCallback {
 		System.err.println("teste ...");
 		logger.info("[GatewayStatusCallback] " + event.getGateway().getGatewayId() + " = " + event.getOldStatus()
 				+ " -> " + event.getNewStatus());
+
 		return true;
 	}
 }

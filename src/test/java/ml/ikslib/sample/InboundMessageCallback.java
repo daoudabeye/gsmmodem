@@ -7,8 +7,7 @@ import org.slf4j.LoggerFactory;
 import ml.ikslib.gateway.callback.IInboundMessageCallback;
 import ml.ikslib.gateway.callback.events.InboundMessageCallbackEvent;
 
-public class InboundMessageCallback implements IInboundMessageCallback
-{
+public class InboundMessageCallback implements IInboundMessageCallback {
 	final Logger logger = LoggerFactory.getLogger(InboundMessageCallback.class);
 
 	@Override

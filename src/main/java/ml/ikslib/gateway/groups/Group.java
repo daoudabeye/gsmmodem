@@ -6,16 +6,14 @@ import java.util.List;
 
 import ml.ikslib.gateway.message.MsIsdn;
 
-public class Group
-{
+public class Group {
 	String name = null;
 
 	String description = null;
 
 	List<MsIsdn> addressList = null;
 
-	public Group(String name, String description)
-	{
+	public Group(String name, String description) {
 		this.name = name;
 		this.description = description;
 		this.addressList = new LinkedList<>();

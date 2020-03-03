@@ -1,133 +1,131 @@
+
 package ml.ikslib.gateway.modem.driver;
-
-import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
-import static com.fazecast.jSerialComm.SerialPort.NO_PARITY;
-import static com.fazecast.jSerialComm.SerialPort.ONE_STOP_BIT;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-
+import ml.ikslib.gateway.callback.events.CnmiCallbackEvent;
 import ml.ikslib.gateway.modem.Modem;
-import ml.ikslib.gateway.modem.client.jserialcomm.SerialEventExceptionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.regex.Matcher;
+
+import static com.fazecast.jSerialComm.SerialPort.*;
 
 public class JSerialModemDriver extends AbstractModemDriver implements SerialPortDataListener {
+    static Logger logger = LoggerFactory.getLogger(JSerialModemDriver.class);
 
-	private final SerialPort serialPort;
+    String portName;
+    int baudRate;
+    SerialPort serialPort;
 
-	private SerialEventExceptionListener serialEventExceptionListener;
+    protected StringBuffer linebuffer = new StringBuffer(4096);
 
-	static Logger logger = LoggerFactory.getLogger(JSerialModemDriver.class);
+    public JSerialModemDriver(Modem modem, String port, int baudRate) {
+        super(modem);
+        this.portName = port;
+        this.baudRate = baudRate;
+        serialPort = SerialPort.getCommPort(portName);
+        serialPort.setBaudRate(baudRate);
+        serialPort.setNumDataBits(8);
+        serialPort.setNumStopBits(ONE_STOP_BIT);
+        serialPort.setParity(NO_PARITY);
+        serialPort.addDataListener(this);
+//		serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
+    }
 
-	String portName;
-	int baudRate;
-	
-	private boolean foundClip = false;
+    @Override
+    public void openPort() throws NumberFormatException, IOException {
+        logger.debug("Opening comm port: " + getPortInfo());
+        if (!serialPort.openPort()) {
+            throw new IOException("Port not opened");
+        }
+        this.in = serialPort.getInputStream();
+        this.out = serialPort.getOutputStream();
+//        this.serialPort.setComPortParameters(this.baudRate, 8, ONE_STOP_BIT, NO_PARITY);
+    }
 
-	public JSerialModemDriver(Modem modem, String port, int baudRate) {
-		super(modem);
-		this.portName = port;
-		this.baudRate = baudRate;
-		serialPort = SerialPort.getCommPort(portName);
-		serialPort.setBaudRate(baudRate);
-		serialPort.setNumDataBits(8);
-		serialPort.setNumStopBits(ONE_STOP_BIT);
-		serialPort.setParity(NO_PARITY);
-		serialPort.addDataListener(this);
-	}
+    @Override
+    public void closePort() throws IOException {
+        logger.debug("Closing comm port: " + getPortInfo());
+        this.in.close();
+        this.in = null;
+        this.out.close();
+        this.out = null;
+        if (!serialPort.closePort()) {
+            throw new IOException("Port not closed");
+        }
+    }
 
-	@Override
-	public int getListeningEvents() {
-		return LISTENING_EVENT_DATA_AVAILABLE;
-	}
+    @Override
+    public String getPortInfo() {
+        return this.portName + ":" + this.baudRate;
+    }
 
-	@Override
-	public void serialEvent(SerialPortEvent event) {
-		try {
-			byte[] readBytes = readBytes();
-			if (readBytes != null) {
-				for (byte readByte : readBytes) {
-//					onReadByte(readByte);
-					char c = (char) readByte;
-					this.buffer.append(c);
-					if (this.buffer.indexOf("+CLIP") >= 0) {
-						if (!this.foundClip) {
-							this.foundClip = true;
-							new ClipReader().start();
-						}
-					} else
-						this.foundClip = false;
-				}
-				
-//				System.err.println(this.buffer.toString());
-			}
-		} catch (Exception e) {
-			if (serialEventExceptionListener != null) {
-				serialEventExceptionListener.onException(e);
-			}
-		}
+    @Override
+    public int getListeningEvents() {
+        return LISTENING_EVENT_DATA_AVAILABLE;
+    }
 
-	}
+    @Override
+    public void serialEvent(SerialPortEvent event) {
+        try {
+			if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+				return;
+            this.readData();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-	@Override
-	protected boolean hasData() throws IOException {
-		return ((serialPort != null) && (this.serialPort.bytesAvailable() > 0));
-	}
+    protected void readData() throws IOException {
+        boolean foundClip = false;
+        while (hasData()) {
+            boolean breakWhile = false;
+            try {
+                char c = (char) read();
+                JSerialModemDriver.this.buffer.append(c);
+                this.linebuffer.append(c);
+				logger.debug("> " + c);
+                if (c == '\n' || c == '\r') {
+                    String l = linebuffer.toString();
+                    logger.info("Line >" + linebuffer.toString());
+                    linebuffer.delete(0, linebuffer.length());
+//                    readLine(l);
+                    Matcher cmtiMatch = this.CMTI_REGEX.matcher(l);
+                    if(cmtiMatch.find()){
+                        String msgMemory = cmtiMatch.group(1);
+                        String msgIndex = cmtiMatch.group(2);
+                        this.modem.getMessageReader().addCnmiEvent(new CnmiCallbackEvent(msgMemory, msgIndex));
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug("Error Reading :" + e.getMessage(), e);
+                breakWhile = true;
+            }
 
-	private byte[] readBytes() {
-		int bytesAvailable = serialPort.bytesAvailable();
-		if (bytesAvailable == 0) {
-			return null;
-		} else if (bytesAvailable > 0) {
-			byte[] bytes = new byte[bytesAvailable];
-			if (serialPort.readBytes(bytes, bytes.length) == bytes.length) {
-				return bytes;
-			} else {
-				throw new RuntimeException("Error reading bytes");
-			}
-		} else {
-			throw new RuntimeException("Port not opened");
-		}
-	}
+            if (JSerialModemDriver.this.buffer.indexOf("+CLIP") >= 0) {
+                if (!foundClip) {
+                    foundClip = true;
+                    new ClipReader().start();
+                }
+            } else
+                foundClip = false;
 
-	@Override
-	public void openPort() throws IOException, TimeoutException, InterruptedException {
-		// TODO Auto-generated method stub
-		logger.debug("Opening comm port: " + getPortInfo());
+            if (breakWhile)
+                break;
+        }
+    }
 
-		if (!serialPort.openPort()) {
-			throw new IOException("Port not opened");
-		}
-		this.in = serialPort.getInputStream();
-		this.out = serialPort.getOutputStream();
+    public boolean process(CnmiCallbackEvent event) throws Exception {
+        String msgMemory = event.getMsgMemory();
+        String msgIndex = event.getMsgIndex();
 
-	}
-
-	@Override
-	public void closePort() throws IOException, TimeoutException, InterruptedException {
-		// TODO Auto-generated method stub
-		logger.debug("Closing comm port: " + getPortInfo());
-		this.in.close();
-		this.in = null;
-		this.out.close();
-		this.out = null;
-		this.byteArrayOutputStream.close();
-		if (!serialPort.closePort()) {
-			throw new IOException("Port not closed");
-		}
-
-	}
-
-	@Override
-	public String getPortInfo() {
-		// TODO Auto-generated method stub
-		return this.portName + ":" + this.baudRate;
-	}
-
+        logger.warn("Reading " + event.getMsgIndex());
+        String smsData = this.readStoredSms(msgIndex, msgMemory).getResponseData();
+        logger.warn("Readed " + smsData);
+        return true;
+    }
 }

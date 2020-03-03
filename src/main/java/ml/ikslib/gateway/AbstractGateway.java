@@ -391,4 +391,6 @@ public abstract class AbstractGateway {
 		b.append("== GATEWAY END ========================================================================%n");
 		return b.toString();
 	}
+
+	public abstract void cleanMemory() throws Exception;
 }

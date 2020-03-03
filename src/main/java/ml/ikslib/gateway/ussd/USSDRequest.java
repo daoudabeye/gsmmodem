@@ -20,6 +20,8 @@
 
 package ml.ikslib.gateway.ussd;
 
+import ml.ikslib.gateway.message.OutboundMessage;
+
 /**
  * Class representing a GSM Unstructured Supplemental Service Data (USSD)
  * network response.
@@ -31,6 +33,9 @@ public class USSDRequest extends USSDDatagram {
 	private static final long serialVersionUID = 1L;
 
 	private USSDResultPresentation presentation;
+
+	private OutboundMessage.SentStatus sentStatus;
+	private OutboundMessage.FailureCause failureCause;
 
 	/**
 	 * Default constructor
@@ -98,5 +103,21 @@ public class USSDRequest extends USSDDatagram {
 		buf.append("Content: ");
 		buf.append(getContent() != null ? getContent() : "(EMPTY)");
 		return buf.toString();
+	}
+
+	public OutboundMessage.SentStatus getSentStatus() {
+		return sentStatus;
+	}
+
+	public void setSentStatus(OutboundMessage.SentStatus sentStatus) {
+		this.sentStatus = sentStatus;
+	}
+
+	public OutboundMessage.FailureCause getFailureCause() {
+		return failureCause;
+	}
+
+	public void setFailureCause(OutboundMessage.FailureCause failureCause) {
+		this.failureCause = failureCause;
 	}
 }

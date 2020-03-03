@@ -259,8 +259,7 @@ public abstract class AbstractHttpGateway extends AbstractGateway
 		URLConnection con;
 		String line;
 		BufferedReader in;
-		switch (method)
-		{
+		switch (method) {
 			case POST:
 				u = new URL(url);
 				OutputStreamWriter out;

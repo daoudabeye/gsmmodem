@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import ml.ikslib.gateway.modem.driver.SerialModemDriver;
+import ml.ikslib.gateway.modem.driver.JSerialModemDriver;
 import ml.ikslib.gateway.ussd.USSDRequest;
 import ml.ikslib.gateway.ussd.USSDResponse;
 import org.slf4j.Logger;
@@ -64,7 +64,7 @@ public class Modem extends AbstractGateway {
 		if (isPortAnIpAddress(address))
 			this.modemDriver = new IPModemDriver(this, address, port);
 		else
-			this.modemDriver = new SerialModemDriver(this, address, port);
+			this.modemDriver = new JSerialModemDriver(this, address, port);
 		if (!Common.isNullOrEmpty(memoryLocations))
 			this.modemDriver.setMemoryLocations(memoryLocations);
 		this.simPin = simPin;
@@ -84,11 +84,26 @@ public class Modem extends AbstractGateway {
 	}
 
 	@Override
+	public void cleanMemory() throws Exception {
+		synchronized (this.modemDriver._LOCK_) {
+			for (int i = 1; i < 50; i++) {
+				try {
+					this.modemDriver.atDeleteMessage(i);
+				}catch (Exception e){
+					logger.info("delete momero out at " + i);
+					break;
+				}
+			}
+		}
+	}
+
+	@Override
 	public void _start() throws Exception {
 		synchronized (this.modemDriver._LOCK_) {
 			this.modemDriver.openPort();
 			this.modemDriver.initializeModem();
 			this.messageReader = new MessageReader(this);
+			this.messageReader.readStoredMsg();
 			this.messageReader.start();
 			logger.info(String.format("Gateway: %s: %s, SL:%s, SIG: %s / %s", toShortString(), getDeviceInformation(),
 					this.modemDriver.getMemoryLocations(), this.modemDriver.getSignature(true),
@@ -205,7 +220,7 @@ public class Modem extends AbstractGateway {
 			if ((message.getMemIndex() == -1) && (message.getMpMemIndex().length() > 0)) {
 				StringTokenizer tokens = new StringTokenizer(message.getMpMemIndex(), ",");
 				while (tokens.hasMoreTokens())
-					this.modemDriver.atDeleteMessage(message.getMemLocation(), Integer.valueOf(tokens.nextToken()));
+					this.modemDriver.atDeleteMessage(message.getMemLocation(), Integer.parseInt(tokens.nextToken()));
 				return true;
 			}
 			return false;
@@ -217,10 +232,13 @@ public class Modem extends AbstractGateway {
         synchronized (this.modemDriver._LOCK_) {
             USSDResponse response = this.modemDriver.atSendUssd(request.getRawRequest(), interactive);
             if(response != null){
+				request.setSentStatus(SentStatus.Sent);
                 response.setGatewayId(getGatewayId());
-
                 return response;
-            }
+            } else {
+				request.setSentStatus(SentStatus.Failed);
+				request.setFailureCause(FailureCause.GatewayFailure);
+			}
         }
 		return null;
 	}
@@ -252,6 +270,10 @@ public class Modem extends AbstractGateway {
 		} catch (UnknownHostException e) {
 			return false;
 		}
+	}
+
+	public MessageReader getMessageReader(){
+		return this.messageReader;
 	}
 
 }

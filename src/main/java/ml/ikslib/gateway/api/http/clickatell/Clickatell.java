@@ -275,4 +275,9 @@ public class Clickatell extends AbstractHttpGateway
 	protected USSDResponse _sendUSSDCommand(USSDRequest request, boolean interactive) throws Exception {
 		return null;
 	}
+
+	@Override
+	public void cleanMemory() throws Exception {
+
+	}
 }

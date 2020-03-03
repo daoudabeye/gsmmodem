@@ -36,6 +36,18 @@ public class Statistics {
 		return this.totalFailures;
 	}
 
+	public int getTotalUssdSent() {
+		return totalUssdSent;
+	}
+
+	public int getTotalUssdFailed() {
+		return totalUssdFailed;
+	}
+
+	public int getTotalUssdFailures() {
+		return totalUssdFailures;
+	}
+
 	public Date getStartTime() {
 		return new Date(this.startTime.getTime());
 	}

@@ -4,7 +4,6 @@ package ml.ikslib.gateway.modem.driver.serial;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Enumeration;
-
 /**
  * Some methods to use generics with reflection.
  */

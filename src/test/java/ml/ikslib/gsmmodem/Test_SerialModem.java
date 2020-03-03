@@ -3,6 +3,8 @@ package ml.ikslib.gsmmodem;
 
 import javax.crypto.spec.SecretKeySpec;
 
+import ml.ikslib.gateway.callback.ICnmiNotificationCallback;
+import ml.ikslib.gateway.callback.events.CnmiCallbackEvent;
 import ml.ikslib.gateway.ussd.USSDDcs;
 import ml.ikslib.gateway.ussd.USSDRequest;
 import ml.ikslib.gateway.ussd.USSDResponse;
@@ -17,6 +19,7 @@ import ml.ikslib.gateway.callback.events.DeliveryReportCallbackEvent;
 import ml.ikslib.gateway.callback.events.InboundMessageCallbackEvent;
 import ml.ikslib.gateway.crypto.AESKey;
 import ml.ikslib.gateway.modem.Modem;
+import purejavacomm.PureJavaSerialPort;
 
 public class Test_SerialModem extends TestCase {
 	static Logger logger = LoggerFactory.getLogger(Test_SerialModem.class);
@@ -28,6 +31,14 @@ public class Test_SerialModem extends TestCase {
 		public boolean process(InboundMessageCallbackEvent event) {
 			logger.info("[InboundMessageCallback] " + event.getMessage().toShortString());
 			logger.info(event.getMessage().toString());
+			return true;
+		}
+	}
+
+	public class CNMICallback implements ICnmiNotificationCallback {
+		@Override
+		public boolean process(CnmiCallbackEvent event) {
+			logger.info("[InboundMessageCallback] I :" + event.getMsgIndex() + "ML :" + event.getMsgMemory());
 			return true;
 		}
 	}
@@ -48,8 +59,8 @@ public class Test_SerialModem extends TestCase {
 		Service.getInstance().setInboundMessageCallback(new InboundMessageCallback());
 		Service.getInstance().setDeliveryReportCallback(new DeliveryReportCallback());
 		Service.getInstance().start();
-		Modem gateway = new Modem("modem", "COM8", "115200", "0000", "", "", "");
-		
+		Modem gateway = new Modem("modem", "COM91", "115200", "0000", "", "", "");
+
 		Service.getInstance().registerGateway(gateway);
 
 //		// Print out some device information.
@@ -61,18 +72,10 @@ public class Test_SerialModem extends TestCase {
 		// Sleep to emulate async operation.
 		
 		logger.info("Gateway ready....:");
-		//Thread.sleep(80000);
-		
+		Thread.sleep(800000);
 		
 		if (RECIPIENT.length() > 0) {
-
-			USSDRequest request = new USSDRequest("#555#");
-			logger.info("Sending ussd:");
-			USSDResponse res = gateway.send(request);
-
-			logger.info("Gateway Response....:");
-//			logger.info(res.toString());
-			//Thread.sleep(60000);
+			Thread.sleep(30000);
 		}
 		Service.getInstance().unregisterGateway(gateway);
 		try {

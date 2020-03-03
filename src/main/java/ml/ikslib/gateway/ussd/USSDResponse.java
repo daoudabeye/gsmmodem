@@ -20,6 +20,8 @@
 
 package ml.ikslib.gateway.ussd;
 
+import ml.ikslib.gateway.message.OutboundMessage;
+
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 

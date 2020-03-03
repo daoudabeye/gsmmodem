@@ -202,7 +202,7 @@ public class CallbackManager {
 									logger.error("Error in InboundMessageCallback!", e);
 								}
 							}
-						} else if (ev instanceof InboundCallCallbackEvent) {
+						}  else if (ev instanceof InboundCallCallbackEvent) {
 							if (CallbackManager.this.inboundCallCallback != null) {
 								try {
 									handlerFound = true;

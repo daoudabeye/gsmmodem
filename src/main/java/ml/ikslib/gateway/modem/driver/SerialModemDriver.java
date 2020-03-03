@@ -39,10 +39,10 @@ public class SerialModemDriver extends AbstractModemDriver implements SerialPort
 		this.out = this.serialPort.getOutputStream();
 		this.serialPort.setSerialPortParams(this.baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
 				SerialPort.PARITY_NONE);
-		this.serialPort.setInputBufferSize(Integer.valueOf(getModemSettings("port_buffer")));
-		this.serialPort.setOutputBufferSize(Integer.valueOf(getModemSettings("port_buffer")));
+		this.serialPort.setInputBufferSize(Integer.parseInt(getModemSettings("port_buffer")));
+		this.serialPort.setOutputBufferSize(Integer.parseInt(getModemSettings("port_buffer")));
 		this.serialPort.enableReceiveThreshold(2);
-		this.serialPort.enableReceiveTimeout(Integer.valueOf(getModemSettings("timeout")));
+		this.serialPort.enableReceiveTimeout(Integer.parseInt(getModemSettings("timeout")));
 		this.serialPort.notifyOnDataAvailable(true);
 		this.serialPort.addEventListener(this);
 		if (getModemSettings("flowcontrol").equalsIgnoreCase("INOUT"))
@@ -74,9 +74,10 @@ public class SerialModemDriver extends AbstractModemDriver implements SerialPort
 
 	@Override
 	public void serialEvent(SerialPortEvent event) {
+		System.err.println("Data available");
 		int eventType = event.getEventType();
+		logger.info("Data available " + getPortInfo());
 		if (eventType == SerialPortEvent.DATA_AVAILABLE)
 			this.pollReader.interrupt();
 	}
-
 }
